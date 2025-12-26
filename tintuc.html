@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ỨNG DỤNG CẢM BIẾN EMG VÀO ĐIỀU KHIỂN CÁNH TAY MÁY TỪ XA</title>
+
+  <!-- Tailwind CDN for quick styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body { 
+      font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; 
+      background: #f3f4f6; 
+      scroll-behavior: smooth; /* Smooth scrolling cho toàn trang */
+    }
+    .article-image { 
+      width: 100%; 
+      height: 360px; 
+      object-fit: cover; 
+      border-radius: 0.5rem; 
+    }
+    .card { 
+      background: white; 
+      border-radius: 0.75rem; 
+      box-shadow: 0 6px 18px rgba(15,23,42,0.06); 
+      transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.6s ease; /* Hiệu ứng hover và fade-in */
+      opacity: 0; /* Ẩn ban đầu */
+      transform: translateY(30px); /* Dịch xuống một chút ban đầu */
+    }
+    .card.visible { 
+      opacity: 1; 
+      transform: translateY(0); /* Trở về vị trí ban đầu khi xuất hiện */
+    }
+    .card:hover { 
+      transform: translateY(-5px); 
+      box-shadow: 0 10px 24px rgba(15,23,42,0.1); /* Hiệu ứng nâng khi hover */
+    }
+    /* Ensure nav height reserved on small screens */
+    main { padding-top: 5rem; }
+    @media (min-width: 768px) { main { padding-top: 4.5rem; } }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <nav class="fixed top-0 left-0 right-0 bg-white border-b z-50 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="logo.png" 
+             alt="logo" class="w-10 h-10 rounded-full border" />
+        <div class="text-lg font-semibold">Tin tức EMG & Bionics</div>
+      </div>
+
+      <ul class="hidden sm:flex space-x-6 text-gray-700 font-medium">
+        <li><a href="index.html" class="hover:text-blue-600">Trang chủ</a></li>
+        <li><a href="gioithieu.html" class="hover:text-blue-600">Giới thiệu</a></li>
+        <li><a href="progress.html" class="hover:text-blue-600">Quá trình thực hiện</a></li>
+        <li><a href="tintuc.html" class="text-blue-600 font-semibold">Tin tức</a></li>
+      </ul>
+
+      <button id="menu-toggle" class="md:hidden p-2 rounded hover:bg-gray-100">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+
+    <div id="mobile-menu" class="hidden md:hidden border-t bg-white">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-2">
+        <a href="index.html" class="p-2 rounded hover:bg-gray-100">Trang chủ</a>
+        <a href="gioithieu.html" class="p-2 rounded hover:bg-gray-100">Giới thiệu</a>
+        <a href="progress.html" class="hover:text-blue-600">Quá trình thực hiện</a>
+        <a href="tintuc.html" class="p-2 rounded bg-gray-100">Tin tức</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-5xl mx-auto px-4 pb-12">
+    <header class="text-center mb-8">
+      <h1 class="text-1xl md:text-2xl font-bold text-gray-900">Tin tức & Cập nhật — Cánh tay hỗ trợ, EMG & Robot</h1>
+    </header>
+
+    <article class="card p-6 mb-6">
+      <img class="article-image mb-4" src="https://atombodies.com/_next/image?url=%2Fimages%2Fcompany%2Fcompany-2.jpg&w=828&q=75" alt="Cánh tay giả minh họa">
+      <h2 class="text-2xl font-semibold text-gray-900 mb-1">Atom Touch — cánh tay giả AI có điều khiển từng ngón</h2>
+      <p class="text-sm text-gray-500 mb-3">2025</p>
+      <p class="text-gray-700 mb-3">
+        Atom (Atom Bodies) giới thiệu sản phẩm <strong>Atom Touch</strong> — một cánh tay giả tích hợp AI và giao diện thần kinh, cho phép người dùng điều khiển khuỷu, cổ tay và từng ngón với độ tinh tế cao. Thiết kế hướng đến trọng lượng nhẹ, gọn và có phản hồi xúc giác để người dùng cảm nhận lực nắm.
+      </p>
+      <p class="text-sm">Nguồn: <a href="https://atombodies.com/touch" target="_blank" rel="noopener noreferrer" class="text-blue-600">Atom Bodies — Touch</a></p>
+    </article>
+
+    <article class="card p-6 mb-6">
+      <img class="article-image mb-4" src="https://assets.newatlas.com/dims4/default/ae1b1b9/2147483647/strip/true/crop/1440x960+0+0/resize/1920x1280!/format/webp/quality/90/?url=https%3A%2F%2Fnewatlas-brightspot.s3.amazonaws.com%2F16%2F01%2Fb4c402394a1c97c9d418b8a03f3c%2Fusing-a-combination-of-soft-and-rigid-components-the-prosthetic-hand-can-accurately-identify-objects-its-gripping-and-adjust-its-pressure-accordingly.jpg" alt="Bàn tay giả Johns Hopkins">
+      <h2 class="text-2xl font-semibold text-gray-900 mb-1">Bàn tay giả của Johns Hopkins điều chỉnh lực nắm chính xác</h2>
+      <p class="text-sm text-gray-500 mb-3">Tháng 3, 2025</p>
+      <p class="text-gray-700 mb-3">
+        Nhóm kỹ sư tại Johns Hopkins phát triển một bàn tay giả kết hợp vật liệu mềm và cảm biến ba lớp, cho phép điều chỉnh lực nắm phù hợp với nhiều vật dụng hàng ngày, giảm nguy cơ làm vỡ/hư hỏng vật. Hệ thống dùng tín hiệu EMG kết hợp machine learning để cải thiện điều khiển.
+      </p>
+      <p class="text-sm">Nguồn: <a href="https://newatlas.com/robotics/prosthetic-hand-hard-squeeze-johns-hopkins/" target="_blank" rel="noopener noreferrer" class="text-blue-600">New Atlas (Johns Hopkins)</a></p>
+    </article>
+
+    <article class="card p-6 mb-6">
+      <img class="article-image mb-4" src="https://www.technology.org/texorgwp/wp-content/uploads/2025/09/neuroprosthesis-feat.jpg" alt="Thử nghiệm lâm sàng chi giả có cảm giác">
+      <h2 class="text-2xl font-semibold text-gray-900 mb-1">Thử nghiệm lâm sàng: chi giả có cảm giác (sensory prostheses)</h2>
+      <p class="text-sm text-gray-500 mb-3">Tháng 9, 2025</p>
+      <p class="text-gray-700 mb-3">
+        Case Western Reserve và các đối tác khởi động thử nghiệm lâm sàng cho các hệ thống chi giả có khả năng tái tạo xúc giác — mục tiêu là giúp người dùng cảm nhận tiếp xúc và làm cho chi giả trở thành “một phần” cơ thể.
+      </p>
+      <p class="text-sm">Nguồn: <a href="https://www.technology.org/2025/09/27/new-clinical-trial-to-test-sensory-prostheses-for-people-with-upper-limb-loss/" target="_blank" rel="noopener noreferrer" class="text-blue-600">Technology.org</a> · <a href="https://case.edu/news/new-clinical-trial-test-sensory-prostheses-people-upper-limb-loss" target="_blank" rel="noopener noreferrer" class="text-blue-600">Case.edu</a></p>
+    </article>
+
+    <article class="card p-6 mb-6">
+      <img class="article-image mb-4" src="https://news.uchicago.edu/sites/default/files/styles/gallery/public/images/2025-01/Steering%20Wheel%20Fix_Charles%20Greenspon.png?h=944f5cba&itok=ASESKM6S" alt="BCI tạo xúc giác cho chi giả">
+      <h2 class="text-2xl font-semibold text-gray-900 mb-1">BCI giúp cánh tay giả “cảm” — nghiên cứu từ University of Chicago</h2>
+      <p class="text-sm text-gray-500 mb-3">Tháng 1, 2025</p>
+      <p class="text-gray-700 mb-3">
+        Các nhà khoa học tại UChicago báo cáo tiến bộ trong giao diện não-máy (BCI) để mô phỏng cảm giác xúc giác chân thật bằng kích thích điện não theo thời gian chính xác. Kết quả cho thấy người tham gia có thể cảm nhận cạnh, hình dạng, và chuyển động trên cánh tay giả.
+      </p>
+      <p class="text-sm">Nguồn: <a href="https://news.uchicago.edu/story/making-prosthetic-limbs-feel-more-real-brain-computer-interfaces" target="_blank" rel="noopener noreferrer" class="text-blue-600">UChicago News</a></p>
+    </article>
+
+    <article class="card p-6 mb-6">
+        <img class="article-image mb-4" 
+             src="https://i1-vnexpress.vnecdn.net/2025/01/26/Bo-khop-Da-nang-1737856679-2690-1737856801.jpg?w=680&h=0&q=100&dpr=2&fit=crop&s=GZMc0pEO8705m4UvEbIeqQ" 
+             alt="Sinh viên chế tạo cánh tay nhân tạo">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-1">
+          Sinh viên chế tạo cánh tay nhân tạo hỗ trợ người khuyết tật
+        </h2>
+        <p class="text-sm text-gray-500 mb-3">Tháng 1, 2025</p>
+        <p class="text-gray-700 mb-3">
+          Nhóm “Cánh Cụt” tại TP HCM đã chế tạo bộ khớp đa năng giúp người khuyết tật cầm nắm vật thể hình trụ, dùng dao, ăn uống bằng thìa, gõ bàn phím, sử dụng chuột.  
+        </p>
+        <p class="text-sm">Nguồn: <a href="https://vnexpress.net/sinh-vien-che-tao-canh-tay-nhan-tao-ho-tro-nguoi-khuyet-tat-4843421.html" target="_blank" class="text-blue-600">VnExpress</a></p>
+    </article>
+    <article class="card p-6 mb-6">
+        <img class="article-image mb-4"
+             src="https://i1-vnexpress.vnecdn.net/2024/12/21/Bo-khop-da-nang-1734769668-1667-1734769851.jpg?w=680&h=0&q=100&dpr=2&fit=crop&s=3ZVUZjftDYM25BoQaoy0JA"
+             alt="Bộ khớp đa năng người khuyết tật">
+        <h2 class="text-2xl font-semibold text-gray-900 mb-1">
+          “Cánh tay nhân tạo” thắng giải công nghệ cho người khuyết tật
+        </h2>
+        <p class="text-sm text-gray-500 mb-3">Tháng 12, 2024</p>
+        <p class="text-gray-700 mb-3">
+          Bốn sinh viên ở TP HCM đã chế tạo bộ khớp đa năng với chi phí thấp (khoảng vài trăm nghìn đồng), hỗ trợ cầm nắm, gõ phím, sinh hoạt hàng ngày cho người khuyết tật tay.  
+        </p>
+        <p class="text-sm">Nguồn: <a href="https://vnexpress.net/canh-tay-nhan-tao-thang-giai-cong-nghe-cho-nguoi-khuyet-tat-4830483.html" target="_blank" class="text-blue-600">VnExpress</a></p>
+      </article>
+
+  </main>
+
+  <footer class="mt-10 mb-4 text-center text-gray-500 text-sm">
+    © 2025 Nhóm Sinh viên Nguyễn Ngọc Tú & Vũ Bạch Long – Trường Đại học Công nghiệp thành phố Hồ Chí Minh
+  </footer>
+
+  <script>
+    document.getElementById('menu-toggle').addEventListener('click', function () {
+      const m = document.getElementById('mobile-menu');
+      m.classList.toggle('hidden');
+    });
+
+    const cards = document.querySelectorAll('.card');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target); 
+        }
+      });
+    }, { 
+      threshold: 0.2, 
+      rootMargin: '0px 0px -50px 0px' 
+    });
+
+    cards.forEach(card => observer.observe(card));
+  </script>
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ỨNG DỤNG CẢM BIẾN EMG VÀO ĐIỀU KHIỂN CÁNH TAY MÁY TỪ XA</title>
+  
+  <!-- Thư viện cần thiết -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared.css">
+
+  <!-- Import model-viewer (bắt buộc để hiển thị mô hình 3D) -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+
+  <style>
+    /* CSS cho các mô hình 3D */
+    .model-viewer {
+      width: 100%;
+      height: 500px;
+      background: #f3f4f6;
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    @media (max-width: 768px) {
+      .model-viewer {
+        height: 400px;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50 font-sans flex flex-col items-center p-4 md:p-8 text-gray-800">
+  <!-- Preloader -->
+  <div id="preloader">
+    <img id="preloader-logo" src="logo.png" alt="Preloader Logo" />
+    <div id="preloader-text">Đang tải ...</div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="w-full bg-white shadow-md fixed top-0 left-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 flex justify-between items-center h-14">
+      <button id="menu-toggle" class="sm:hidden text-gray-800 focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      <span class="text-lg font-bold text-gray-800">ỨNG DỤNG CẢM BIẾN EMG VÀO ĐIỀU KHIỂN CÁNH TAY MÁY TỪ XA</span>
+      <ul class="hidden sm:flex space-x-6 text-gray-700 font-medium">
+        <li><a href="index.html" class="text-blue-600 border-b-2 border-blue-600">Trang chủ</a></li>
+        <li><a href="gioithieu.html" class="hover:text-blue-600">Giới thiệu</a></li>
+        <li><a href="progress.html" class="hover:text-blue-600">Quá trình thực hiện</a></li>
+        <li><a href="tintuc.html" class="hover:text-blue-600">Tin tức</a></li>
+      </ul>
+    </div>
+    <div id="mobile-menu" class="hidden sm:hidden bg-white border-t border-gray-200">
+      <ul class="flex flex-col p-2 space-y-2 text-gray-700 font-medium">
+        <li><a href="index.html" class="block px-4 py-2 text-blue-600 bg-gray-100 rounded">Trang chủ</a></li>
+        <li><a href="gioithieu.html" class="block px-4 py-2 hover:bg-gray-100 rounded">Giới thiệu</a></li>
+        <li><a href="progress.html" class="block px-4 py-2 hover:bg-gray-100 rounded">Quá trình thực hiện</a></li>
+        <li><a href="tintuc.html" class="block px-4 py-2 hover:bg-gray-100 rounded">Tin tức</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <header class="pt-20 w-full max-w-6xl mb-10 flex flex-col md:flex-row justify-between items-center px-4 md:px-8 gap-4 text-center md:text-left">
+    <img src="logo.png" alt="Logo Đại học Công nghiệp" class="w-44 md:w-48 object-contain hover:scale-105 transition-transform duration-300" />
+    <div class="flex-1">
+      <h1 id="main-title" class="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+        ỨNG DỤNG CẢM BIẾN EMG VÀO ĐIỀU KHIỂN CÁNH TAY MÁY TỪ XA
+      </h1>
+      <p id="main-description" class="text-gray-600 text-sm md:text-lg">
+        Giao diện thời gian thực để theo dõi và điều khiển cánh tay robot bằng cảm biến EMG
+      </p>
+    </div>
+    <img src="logo_fet.png" alt="Logo Khoa Điện tử" class="w-16 md:w-28 object-contain hover:scale-105 transition-transform duration-300" />
+  </header>  
+
+  <!-- Main content -->
+  <main class="w-full max-w-6xl bg-white rounded-3xl shadow-lg p-6 md:p-8 space-y-8">
+    <section aria-live="polite" class="space-y-6">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+        <div class="flex space-x-3">
+          <button id="font-small" class="px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-sm font-medium">Chữ nhỏ</button>
+          <button id="font-medium" class="px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-sm font-medium">Chữ trung bình</button>
+          <button id="font-large" class="px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-sm font-medium">Chữ lớn</button>
+        </div>
+        <div class="flex space-x-3">
+          <button id="lang-vi" class="px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-sm font-medium">Tiếng Việt</button>
+          <button id="lang-en" class="px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition text-sm font-medium">English</button>
+        </div>
+      </div>
+
+      <div id="loading-spinner" class="hidden flex justify-center items-center">
+        <div class="w-6 h-6 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 items-center">
+        <div class="space-y-4 text-left">
+          <div class="text-xl md:text-2xl font-semibold loader" id="hand-state">Đang kết nối...</div>
+          <div class="flex items-center space-x-2">
+            <span class="text-sm md:text-base text-gray-600" id="connection-label">Trạng thái kết nối:</span>
+            <span id="connection-status" class="w-4 h-4 rounded-full bg-red-500" aria-label="Chưa kết nối"></span>
+          </div>
+          <div class="text-sm md:text-base text-gray-600" id="transition-count">Tổng chuyển đổi: 0</div>
+          <div class="text-sm md:text-base text-gray-600" id="training-status">Trạng thái huấn luyện: Chưa bắt đầu</div>
+          <div class="text-sm md:text-base text-gray-600 hidden" id="training-timer">Thời gian còn lại: 60s</div>
+          <div class="text-sm md:text-base text-gray-600" id="threshold-low">Ngưỡng thấp: Chưa có dữ liệu</div>
+          <div class="text-sm md:text-base text-gray-600" id="threshold-high">Ngưỡng cao: Chưa có dữ liệu</div>
+          <div class="text-sm md:text-base text-gray-600" id="firmware-version">Phiên bản Firmware: Chưa có dữ liệu</div>
+          <div class="text-sm md:text-base text-gray-600" id="ema-line">S1_EMA: Chưa có dữ liệu &nbsp;|&nbsp; S2_EMA: Chưa có dữ liệu</div>
+        </div>
+        <div class="flex justify-center">
+          <img id="hand-image" src="open_hand.png" alt="Cử chỉ tay mở" class="w-40 md:w-48 h-auto transition-transform duration-500 hover:scale-105" />
+        </div>
+      </div>
+
+      <div class="flex flex-wrap justify-center gap-4 mt-4 fade-section">
+        <button id="train-button" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Bắt đầu huấn luyện</button>
+        <button id="reset-button" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Đặt lại ngưỡng</button>
+        <button id="test-ema" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">Test EMA</button>
+        <a id="firmware-button" href="ota.html" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Cập nhật phần mềm</a>
+      </div>
+
+      <div class="mt-6">
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="text-xl md:text-2xl font-semibold text-gray-900">Biểu đồ trạng thái tay</h2>
+          <div class="flex space-x-2">
+            <button id="zoom-in-hand" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">Phóng to 🔎</button>
+            <button id="zoom-out-hand" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">Thu nhỏ 🔍</button>
+          </div>
+        </div>
+        <canvas id="hand-chart" class="w-full max-h-[250px] bg-gray-50 rounded-lg shadow-sm" aria-label="Biểu đồ lịch sử trạng thái cử chỉ tay"></canvas>
+      </div>
+    </section>
+
+    <section class="border-t pt-6 border-gray-200">
+      <h2 id="emg-title" class="text-xl md:text-2xl font-semibold text-gray-900 mb-4">Dữ liệu EMG từ ThingSpeak</h2>
+      <p id="emg-description" class="text-gray-500 mb-4 text-sm md:text-base">Toàn bộ giá trị EMG và phiên bản firmware được gửi mỗi 15 giây</p>
+      <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4 fade-section">
+        <select id="time-filter" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+          <option value="all">Tất cả</option>
+          <option value="1h">1 giờ</option>
+          <option value="1d">1 ngày</option>
+        </select>
+        <div class="flex space-x-3">
+          <button id="zoom-in-emg" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">Phóng to</button>
+          <button id="zoom-out-emg" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">Thu nhỏ</button>
+          <button id="export-emg" class="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm">Xuất dữ liệu (XLS)</button>
+        </div>
+      </div>
+      <canvas id="emg-chart" class="w-full max-h-[300px] bg-gray-50 rounded-lg shadow-sm" aria-label="Biểu đồ dữ liệu EMG và Firmware từ ThingSpeak"></canvas>
+    </section>
+
+    <!-- MÔ HÌNH 3D CÁNH TAY MÁY -->
+    <section class="border-t pt-8 border-gray-200">
+      <h2 class="text-xl md:text-2xl font-semibold text-gray-900 text-center mb-6">
+        Mô hình 3D cánh tay máy
+      </h2>
+      <div class="flex justify-center">
+        <model-viewer
+          id="hand-3d-viewer"
+          class="model-viewer"
+          src="Canhtayv3.glb"
+          alt="Mô hình 3D cánh tay máy"
+          auto-rotate
+          camera-controls
+          shadow-intensity="1"
+          ar
+          ar-modes="webxr scene-viewer quick-look"
+          loading="eager">
+        </model-viewer>
+      </div>
+      <p class="text-center text-gray-600 text-sm mt-4">
+        Xoay, phóng to/thu nhỏ mô hình bằng chuột hoặc ngón tay. Mô hình tự động quay chậm.
+      </p>
+    </section>
+
+    <!-- MÔ HÌNH 3D BOX2 -->
+    <section class="border-t pt-8 border-gray-200">
+      <h2 class="text-xl md:text-2xl font-semibold text-gray-900 text-center mb-6">
+        Mô hình 3D Box (box2.glb)
+      </h2>
+      <div class="flex justify-center">
+        <model-viewer
+          id="box-3d-viewer"
+          class="model-viewer"
+          src="box2.glb"
+          alt="Mô hình 3D Box"
+          auto-rotate
+          camera-controls
+          shadow-intensity="1"
+          ar
+          ar-modes="webxr scene-viewer quick-look"
+          loading="eager">
+        </model-viewer>
+      </div>
+      <p class="text-center text-gray-600 text-sm mt-4">
+        Xoay, phóng to/thu nhỏ mô hình bằng chuột hoặc ngón tay. Mô hình tự động quay chậm.
+      </p>
+    </section>
+
+    <div class="mt-6 flex justify-center fade-section">
+      <button id="guide-button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Hướng dẫn</button>
+    </div>
+
+    <div id="guide-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300 fade-section">
+      <div class="bg-white p-6 rounded-lg max-w-md w-full shadow-lg">
+        <h3 id="guide-title" class="text-lg font-bold text-gray-900 mb-4">Hướng dẫn sử dụng</h3>
+        <div id="guide-content" class="text-gray-700 text-sm space-y-2"></div>
+        <div class="mt-4 flex justify-center">
+          <button id="close-guide" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition text-sm">Đóng</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="error-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300 fade-section">
+      <div class="bg-white p-6 rounded-lg max-w-md w-full shadow-lg">
+        <h3 id="error-title" class="text-lg font-bold text-gray-900 mb-4">Lỗi</h3>
+        <p id="error-content" class="text-gray-600 text-sm mb-4">Lỗi khi xuất dữ liệu, gửi lệnh hoặc thực hiện OTA. Vui lòng thử lại hoặc kiểm tra kết nối.</p>
+        <div class="flex justify-center">
+          <button id="close-error" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition text-sm">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="mt-10 mb-4 text-center text-gray-500 text-sm">
+    © 2025 Nhóm Sinh viên Nguyễn Ngọc Tú & Vũ Bạch Long – Trường Đại học Công nghiệp thành phố Hồ Chí Minh
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    window.addEventListener('load', function () {
+      const preloader = document.getElementById('preloader');
+      setTimeout(() => {
+        preloader.classList.add('hidden');
+      }, 1500); 
+    });
+
+    document.getElementById('menu-toggle').addEventListener('click', function () {
+      document.getElementById('mobile-menu').classList.toggle('hidden');
+    });
+
+    const sections = document.querySelectorAll('header, section, .fade-section');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { 
+      threshold: 0.2,
+      rootMargin: '0px 0px -50px 0px'
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    // Chuyển vật liệu thành màu đen nhám cho cả hai mô hình
+    function applyBlackMaterial(viewerId) {
+      const viewer = document.getElementById(viewerId);
+      if (!viewer) return;
+
+      viewer.addEventListener('load', () => {
+        const model = viewer.model;
+        const scene = model && (model.scene || model.gltfScene);
+        if (!scene) return;
+
+        scene.traverse(node => {
+          if (!node.isMesh || !node.material) return;
+
+          const applyBlack = (mat) => {
+            if (mat.color) mat.color.set(0x000000);
+            if ('metalness' in mat) mat.metalness = 0;
+            if ('roughness' in mat) mat.roughness = 1;
+            mat.needsUpdate = true;
+          };
+
+          if (Array.isArray(node.material)) {
+            node.material.forEach(applyBlack);
+          } else {
+            applyBlack(node.material);
+          }
+        });
+      });
+    }
+
+    applyBlackMaterial('hand-3d-viewer');
+    applyBlackMaterial('box-3d-viewer');
+  </script>
+  <script src="script.js"></script>
+</body>
+</html>

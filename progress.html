@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quá trình thực hiện</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"> 
+  <div class="flex items-center gap-3">
+        <img src="logo.png" 
+             alt="logo" class="w-10 h-10 rounded-full border" />
+        <div class="text-lg font-semibold text-gray-700">ỨNG DỤNG CẢM BIẾN EMG VÀO ĐIỀU KHIỂN CÁNH TAY MÁY TỪ XA</div>
+      </div>
+  <style>
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f3f4f6;
+      scroll-behavior: smooth;
+    }
+    /* Timeline container */
+    .timeline {
+      position: fixed;
+      top: 5rem;
+      left: 2rem;
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .timeline a {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.8rem;
+      border-left: 4px solid #d1d5db;
+      background: white;
+      border-radius: 0.5rem;
+      color: #374151;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease, transform 0.2s ease;
+    }
+    .timeline a:hover {
+      transform: translateX(5px);
+      background: #fef3c7;
+      border-left-color: #f59e0b;
+      color: #b45309;
+    }
+    .timeline a.active {
+      border-left-color: #2563eb;
+      color: #2563eb;
+      font-weight: 700;
+      background: #eff6ff;
+    }
+    .timeline a i {
+      width: 18px;
+      text-align: center;
+    }
+    /* Step card */
+    .step-card {
+      background: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+      padding: 1.5rem;
+      margin-bottom: 3rem;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.6s ease;
+      border-left: 4px solid transparent;
+    }
+    .step-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+      border-left-color: #2563eb;
+    }
+    main { margin-left: 260px; padding-top: 5rem; }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="fixed top-0 left-0 right-0 bg-white border-b z-50 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="logo.png" 
+             alt="logo" class="w-10 h-10 rounded-full border" />
+        
+      </div>
+      <div class="text-lg font-semibold">Quá trình thực hiện</div>
+      <ul class="hidden sm:flex space-x-6 text-gray-700 font-medium">
+        <li><a href="index.html" class="hover:text-blue-600">Trang chủ</a></li>
+        <li><a href="gioithieu.html" class="hover:text-blue-600">Giới thiệu</a></li>
+        <li><a href="progress.html" class="text-blue-600 font-semibold">Quá trình thực hiện</a></li>
+        <li><a href="tintuc.html" class="hover:text-blue-600">Tin tức</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <aside class="timeline hidden md:block">
+    <div class="group">
+      <a href="#step1" class="active">1. Xác định mục tiêu</a>
+    </div>
+    <div class="group">
+      <a href="#step2">2. Nghiên cứu tài liệu</a>
+    </div>
+
+    <div class="group">
+      <a href="#step3">3. Thiết kế hệ thống</a>
+      <div class="submenu hidden group-hover:block ml-6">
+        <a href="#step3-1" class="sub">3.1. Sơ đồ khối</a>
+        <a href="#step3-2" class="sub">3.2. Lựa chọn phần cứng</a>
+        <a href="#step3-3" class="sub">3.3. Giao thức truyền dữ liệu</a>
+      </div>
+    </div>
+
+    <div class="group">
+      <a href="#step4">4. Lắp ráp phần cứng</a>
+      <div class="submenu hidden group-hover:block ml-6">
+        <a href="#step4-1" class="sub">4.1. Cảm biến EMG</a>
+        <a href="#step4-2" class="sub">4.2. Vi điều khiển</a>
+        <a href="#step4-3" class="sub">4.3. Cánh tay robot</a>
+      </div>
+    </div>
+
+    <div class="group">
+      <a href="#step5">5. Lập trình & xử lý EMG</a>
+      <div class="submenu hidden group-hover:block ml-6">
+        <a href="#step5-1" class="sub">5.1. Lọc tín hiệu</a>
+        <a href="#step5-2" class="sub">5.2. Trích xuất đặc trưng</a>
+        <a href="#step5-3" class="sub">5.3. Phân loại cử động</a>
+      </div>
+    </div>
+
+    <div class="group">
+      <a href="#step6">6. Kiểm thử & đánh giá</a>
+    </div>
+  </aside>
+
+  <main class="max-w-3xl mx-auto px-4 pb-16">
+
+    <section id="step1" class="step-card"><h2 class="text-xl font-semibold mb-2">1. Xác định mục tiêu</h2><p>Ứng dụng EMG điều khiển cánh tay máy từ xa. Có khả năng ứng dụng vào việc thao tác từ xa đối với các vấn đề liên quan đến hoá chất độc hại. Ứng dụng trong y sinh khi chăm sóc bệnh nhân nhiễm virus cần phải cách ly.</p></section>
+    <section id="step2" class="step-card">
+        <h2 class="text-xl font-semibold mb-2">2. Nghiên cứu tài liệu</h2>
+        <p>Ở bước này, nhóm tập trung vào việc tìm hiểu cơ sở lý thuyết và tài liệu liên quan để đảm bảo thiết kế đúng hướng.</p>
+        <ul class="list-disc ml-6 mt-2">
+          <li><strong>Tín hiệu EMG:</strong> Tìm hiểu cách cơ bắp tạo ra xung điện, đặc trưng tần số và biên độ, các yếu tố gây nhiễu (mồ hôi, chuyển động, điện lưới).</li>
+          <li><strong>Xử lý tín hiệu:</strong> Nghiên cứu các kỹ thuật lọc nhiễu (Butterworth, Notch), trích xuất đặc trưng (RMS, MAV, Zero Crossing) và phân loại cử động.</li>
+          <li><strong>Robot y sinh:</strong> Khảo sát các ứng dụng thực tế trong phục hồi chức năng, tay giả, và giao tiếp giữa người & máy.</li>
+        </ul>
+        <p class="mt-2">Kết quả của giai đoạn này là cơ sở lý thuyết vững chắc để tiến hành các bước tiếp theo như thiết kế hệ thống và lắp ráp phần cứng.</p>
+      </section>
+
+    <section id="step3" class="step-card"><h2 class="text-xl font-semibold mb-2">3. Thiết kế hệ thống</h2></section>
+    <section id="step3-1" class="step-card mb-6">
+        <h3 class="text-lg font-semibold mb-2">3.1. Sơ đồ khối</h3>
+        <p class="mb-2">Xác định luồng dữ liệu EMG → xử lý → truyền → robot.</p>
+        <img src="image.png" alt="Sơ đồ khối EMG" class="w-full h-auto rounded shadow-md">
+    </section>      
+    <section id="step3-2" class="step-card mb-6">
+        <h3 class="text-lg font-semibold mb-2">3.2. Lựa chọn phần cứng</h3>
+      
+        <!-- Phần EMG -->
+        <div class="mb-4">
+          <h4 class="text-md font-semibold mb-1">EMG</h4>
+          <p>Cảm biến EMG được 
+            <a href="https://www.dfrobot.com/?srsltid=AfmBOor3Cwt04KrWqp5c_p9PBOtw6YEQG6DbFRexpWVSGxfLp85AEr27" target="_blank" class="text-black font-bold">
+                DFRobot
+              </a>   
+             và 
+             <a href="https://github.com/oymotion" target="_blank" class="text-black font-bold">
+                OYMotion
+              </a>  
+              hợp tác sản xuất, có thể phản ánh hoạt động cơ và thần kinh của con người bằng cách phát hiện sEMG.
+            Cảm biến này tích hợp mạch lọc và mạch khuếch đại. Nó khuếch đại sEMG tối thiểu trong phạm vi ±1,5mV 1000 lần và giảm nhiễu (đặc biệt là nhiễu tần số nguồn) bằng đầu vào vi sai và mạch lọc analog. 
+            Tín hiệu đầu ra là analog, lấy 1,5V làm điện áp tham chiếu. Dải điện áp đầu ra là 0~3,0V. 
+            Cường độ tín hiệu phụ thuộc vào hoạt động của cơ. Dạng sóng tín hiệu đầu ra biểu thị hoạt động của cơ và giúp phân tích và nghiên cứu tín hiệu sEMG. 
+            Cụ thể, chúng ta có thể sử dụng ESP32 làm bộ điều khiển để phát hiện hoạt động của cơ, ví dụ: kiểm tra xem cơ có bị căng không; sức mạnh của cơ, v.v.
+            Cảm biến cảm ứng chủ động này có thể cung cấp khả năng thu thập tín hiệu chất lượng cao và dễ sử dụng.
+            Chỉ cần chuẩn bị đơn giản để áp dụng mô-đun cho cả vùng tĩnh và vùng động. Điện cực khô phải được áp dụng cho mô-đun và có thể đọc được tín hiệu chất lượng tốt ngay cả khi không có gel dẫn điện. 
+            So với gel dẫn điện dùng một lần cần thiết cho điện cực y tế, việc sử dụng điện cực khô của chúng tôi thuận tiện hơn và có tuổi thọ cao hơn.</p>
+        </div>
+        <img src="https://dfimg.dfrobot.com/enshop/SEN0240_ShipList_04_1220x813.jpg.webp&quot" alt="Cảm biến EMG" class="w-full h-auto rounded shadow-md mt-2">
+      
+        <div>
+          <h4 class="text-md font-semibold mb-1">Vi điều khiển ESP32 C6</h4>
+          <p><a href="https://www.espressif.com/en/products/socs/esp32-c6" target="_blank" class="text-black font-bold">
+            ESP32 C6 Dev
+          </a>  là bo mạch phát triển dựa trên module ESP32-C6-WROOM-1-N8 kích thước nhỏ được sản xuất bởi Espressif, có 4MB Flash, 320KB ROM, 512KB SRAM. 
+            Tất cả các chân I/O được đưa ra header ở cả hai bên để dễ dàng kết nối, người dùng có thể kết nối các thiết bị ngoại vi bằng dây nối hoặc lắp ESP32-C6 Dev trực tiếp lên một breadboard.</p>
+        </div>
+        <img src="https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32c6/_images/esp32-c6-devkitm-1-v1-annotated-photo.png" alt="ESP32 C6" class="w-full h-auto rounded shadow-md mt-2">
+      </section>      
+      <section id="step3-3" class="step-card">
+        <h3 class="text-lg font-semibold mb-2">3.3. Giao thức truyền dữ liệu</h3>
+        <p>Sử dụng WiFi và MQTT để truyền dữ liệu.</p>
+        <p>
+          MQTT là một giao thức nhắn tin dựa trên các tiêu chuẩn hoặc một bộ các quy tắc được sử dụng cho việc giao tiếp máy với máy. 
+          Cảm biến thông minh, thiết bị đeo trên người và các thiết bị Internet vạn vật (IoT) khác thường phải truyền và nhận dữ liệu qua mạng có tài nguyên và băng thông hạn chế. 
+          Các thiết bị IoT này sử dụng MQTT để truyền dữ liệu vì giao thức này dễ triển khai và có thể giao tiếp dữ liệu IoT một cách hiệu quả. 
+          MQTT hỗ trợ nhắn tin giữa các thiết bị với đám mây và từ đám mây đến thiết bị. Sử dụng HiveMQ Broker để giao tiếp gửi và nhận dữ liệu.
+        </p>
+        <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRb_MJ9OHlrBZikwUjvAMhTaWCls5YkPso3ng&s" 
+             alt="MQTT" 
+             class="w-1/4 h-auto rounded shadow-md mt-10 mx-auto">
+        <p>
+          Ngoài MQTT, dữ liệu EMG từ cảm biến cũng có thể được truyền trực tiếp lên <strong>ThingSpeak</strong>, một nền tảng IoT cho phép lưu trữ, phân tích và trực quan hóa dữ liệu thời gian thực. 
+          ThingSpeak cung cấp API đơn giản để gửi dữ liệu qua HTTP POST hoặc MQTT, giúp giám sát tín hiệu EMG và các thông số khác từ xa. 
+          Việc truyền dữ liệu lên ThingSpeak giúp phân tích dài hạn và dễ dàng xây dựng biểu đồ trực quan trên nền tảng web.
+        </p>
+        <img src="emg_value.png" alt="Dữ liệu EMG trên Thingspeak" class="w-full h-auto rounded shadow-md">
+      </section>
+      
+    <section id="step4" class="step-card"><h2 class="text-xl font-semibold mb-2">4. Lập trình & xử lý EMG</h2></section>
+    <section id="step4-1" class="step-card mb-6">
+        <h3 class="text-lg font-semibold mb-2">4.1. Cảm biến EMG</h3>
+        <p>
+          Cảm biến EMG (Electromyography) được sử dụng để đo hoạt động điện của cơ bắp. Quá trình bắt đầu bằng việc gắn cảm biến lên cơ của người dùng, 
+          sau đó tín hiệu Analog được gửi tới vi điều khiển ESP32 để ghi nhận và giám sát. 
+          ESP32 thực hiện việc đọc dữ liệu liên tục, chuyển đổi tín hiệu Analog sang dạng số và lưu trữ tạm thời để xử lý.
+        </p>
+        <p>
+          Do tín hiệu EMG rất yếu và dễ bị nhiễu từ môi trường xung quanh hoặc các thiết bị điện tử khác, 
+          cần thực hiện các bước lọc nhiễu (band-pass filter) để loại bỏ tạp âm và tín hiệu không mong muốn. 
+          Sau khi lọc, tín hiệu sạch sẽ được sử dụng cho các bước trích xuất đặc trưng và điều khiển servo của cánh tay robot.
+        </p>
+        <p>
+          Ngoài ra, cảm biến EMG còn cung cấp thông tin về cường độ cơ bắp, giúp hệ thống phân loại các cử động khác nhau, 
+          từ đó mang lại khả năng điều khiển mượt mà và chính xác cho cánh tay hỗ trợ.
+        </p>
+        <img src="emg_signal.png" alt="Sơ đồ khối EMG" class="w-full h-auto rounded shadow-md mt-4">
+      </section>      
+      <section id="step4-2" class="step-card mb-6">
+        <h3 class="text-lg font-semibold mb-2">4.2. Vi điều khiển ESP32</h3>
+        
+        <p>
+          ESP32 là vi điều khiển mạnh mẽ với khả năng xử lý tín hiệu nhanh và tích hợp Wi-Fi, rất phù hợp cho các ứng dụng IoT và y sinh. 
+          Để bắt đầu, cần cài đặt 
+          <a href="https://www.arduino.cc/en/software/" target="_blank" class="text-black font-bold">
+            Arduino IDE
+          </a>   
+          và thêm thư viện hỗ trợ ESP32. Cấu hình môi trường bao gồm chọn bo mạch, cổng COM và cài đặt tốc độ truyền dữ liệu phù hợp.
+        </p>
+              
+        <img src="data:image/jpeg;base64,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" 
+             alt="Arduino IDE" 
+             class="w-1/4 h-auto rounded shadow-md mt-10 mx-auto">
+        <p>
+          Sau khi cài đặt, lập trình ESP32 để đọc tín hiệu Analog từ cảm biến EMG. Tín hiệu EMG rất nhạy và thường có nhiễu, 
+          do đó cần áp dụng các bước lọc tín hiệu cơ bản trên ESP32 trước khi sử dụng. 
+          Việc lập trình còn bao gồm truyền dữ liệu đã xử lý lên Server hoặc máy chủ MQTT, cho phép giám sát và điều khiển từ xa.
+        </p>
+        
+        <p>
+          ESP32 cũng hỗ trợ các thuật toán xử lý dữ liệu tại chỗ, ví dụ như
+          <a href="https://blog.vietnamlab.vn/untitled-11/" target="_blank" class="text-black font-bold">
+            K-Mean
+          </a>   
+          để phân loại các mẫu tín hiệu EMG, 
+          từ đó xác định cử động của cơ bắp. Thuật toán này giúp hệ thống học cách nhận diện các cử chỉ khác nhau và 
+          chuyển đổi thành lệnh điều khiển robot chính xác hơn.
+        </p>
+        <p>
+          Ngoài ra, ESP32 còn có khả năng lưu trữ tạm thời dữ liệu trên bộ nhớ trong hoặc EEPROM, 
+          đảm bảo dữ liệu EMG không bị mất khi truyền lên Server bị gián đoạn. Việc tối ưu hóa chương trình và quản lý bộ nhớ là rất quan trọng để duy trì độ chính xác của hệ thống.
+        </p>
+      </section>
+      
+    <section id="step4-3" class="step-card"><h3 class="text-lg font-semibold mb-2">4.3. Cánh tay robot</h3>
+        <p>Lắp ráp servo và khung cơ khí.</p>
+        <img src="arm.png" 
+             alt="robot arm demo 2" 
+             class="rounded-xl shadow-lg max-h-60 object-contain" />
+    </section>
+
+    <section id="step5" class="step-card">
+        <h2 class="text-xl font-semibold mb-2">5. Lập trình & xử lý EMG</h2>
+        <p>Trong bước này, tín hiệu EMG được xử lý, trích xuất đặc trưng và sử dụng để điều khiển cánh tay robot. Ngoài ra, chúng tôi có video minh họa cách tích hợp điều khiển:</p>
+        <div class="relative pb-[56.25%] h-0 overflow-hidden rounded shadow-md mt-4">
+            <iframe class="absolute top-0 left-0 w-full h-full"
+                    src="https://www.youtube.com/embed/lHtmr4_Udy0?autoplay=1&mute=1"
+                    title="Video tích hợp điều khiển"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+            </iframe>
+          </div>          
+      </section>
+      
+    <section id="step5-1" class="step-card"><h3 class="text-lg font-semibold mb-2">5.1. Kết nối servo</h3><p>Kết nối servo với driver.</p></section>
+    <section id="step5-2" class="step-card"><h3 class="text-lg font-semibold mb-2">5.2. Mapping EMG → góc quay</h3><p>Quy đổi tín hiệu EMG thành góc điều khiển.</p></section>
+    <section id="step5-3" class="step-card"><h3 class="text-lg font-semibold mb-2">5.3. Hiệu chỉnh độ nhạy</h3><p>Tinh chỉnh để cử động mượt mà.</p></section>
+
+    <section id="step6" class="step-card"><h2 class="text-xl font-semibold mb-2">6. Kiểm thử & đánh giá</h2><p>Thử nghiệm với nhiều người, đo độ chính xác và độ trễ.</p></section>
+
+  </main>
+
+  <footer class="mt-10 mb-4 text-center text-gray-500 text-sm">
+    © 2025 Nhóm Sinh viên Nguyễn Ngọc Tú & Vũ Bạch Long – Trường Đại học Công nghiệp thành phố Hồ Chí Minh
+  </footer>
+
+  <script>
+    // Fade-in khi cuộn
+    const steps = document.querySelectorAll('.step-card');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.2 });
+
+    steps.forEach(step => observer.observe(step));
+
+    // Active timeline link khi scroll
+    const links = document.querySelectorAll('.timeline a');
+    window.addEventListener('scroll', () => {
+      let current = "";
+      steps.forEach(section => {
+        const sectionTop = section.offsetTop - 100;
+        if (pageYOffset >= sectionTop) {
+          current = section.getAttribute("id");
+        }
+      });
+      links.forEach(link => {
+        link.classList.remove("active");
+        if (link.getAttribute("href") === "#" + current) {
+          link.classList.add("active");
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

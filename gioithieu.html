@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ỨNG DỤNG CẢM BIẾN EMG VÀO ĐIỀU KHIỂN CÁNH TAY MÁY TỪ XA</title>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const toggle = document.getElementById("menu-toggle");
+      const menu = document.getElementById("mobile-menu");
+      toggle.addEventListener("click", () => {
+        menu.classList.toggle("hidden");
+      });
+    });
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans leading-relaxed text-gray-800">
+  <nav class="fixed top-0 left-0 right-0 bg-white border-b z-50 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="logo.png" 
+             alt="logo" class="w-10 h-10 rounded-full border" />
+        <div class="text-lg font-semibold text-gray-700">ỨNG DỤNG CẢM BIẾN EMG VÀO ĐIỀU KHIỂN CÁNH TAY MÁY TỪ XA</div>
+      </div>
+
+      <ul class="hidden md:flex items-center gap-6 text-sm text-gray-700">
+        <li><a href="index.html" class="hover:text-blue-600">Trang chủ</a></li>
+        <li><a href="gioithieu.html" class="text-blue-600 font-semibold">Giới thiệu</a></li>
+        <li><a href="progress.html" class="hover:text-blue-600">Quá trình thực hiện</a></li>
+        <li><a href="tintuc.html" class="hover:text-blue-600">Tin tức</a></li>
+      </ul>
+
+      <button id="menu-toggle" class="md:hidden p-2 rounded hover:bg-gray-100">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+      </button>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden px-4 pb-3">
+      <a href="index.html" class="block py-2 text-gray-700 hover:text-blue-600">Trang chủ</a>
+      <a href="gioithieu.html" class="block py-2 text-blue-600 font-semibold">Giới thiệu</a>
+      <a href="progress.html" class="hover:text-blue-600">Quá trình thực hiện</a>
+      <a href="tintuc.html" class="block py-2 text-gray-700 hover:text-blue-600">Tin tức</a>
+    </div>
+  </nav>
+  <section class="mt-16 relative bg-gradient-to-r from-blue-50 to-blue-100 py-16">
+    <div class="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-center gap-8">
+      <div class="flex-1">
+        <h1 class="text-1xl md:text-2xl font-bold text-black-700 mb-4">
+          Dự án Tốt nghiệp: ỨNG DỤNG CẢM BIẾN EMG VÀO ĐIỀU KHIỂN CÁNH TAY MÁY TỪ XA
+        </h1>
+        <p class="text-gray-700 mb-6">
+          Ứng dụng công nghệ EMG trong hỗ trợ y tế, thí nghiệm và nâng cao chất lượng sống cho người khuyết tật.
+        </p>
+        <p class="font-semibold">
+            Sinh viên: 
+            <a href="https://www.facebook.com/iamtu.in4" target="_blank" class="text-black-700 ">
+              Nguyễn Ngọc Tú
+            </a>, 
+            <a href="https://www.facebook.com/long.vu.293708" target="_blank" class="text-black-700">
+              Vũ Bạch Long
+            </a>
+          </p>               
+        <p class="font-semibold">Người hướng dẫn: TS. Phạm Việt Thành</p>
+      </div>
+      <div class="flex gap-4 justify-center">
+        <img src="emg_pic.png" 
+             alt="robot arm demo 1" 
+             class="rounded-xl shadow-lg max-h-56 object-contain" />
+        <img src="arm.png" 
+             alt="robot arm demo 2" 
+             class="rounded-xl shadow-lg max-h-56 object-contain" />
+      </div>      
+  </section>
+
+  <main class="max-w-5xl mx-auto mt-10 p-6 bg-white shadow rounded-lg space-y-8">
+
+    <section>
+      <h2 class="text-xl font-bold text-blue-600 mb-2">Bối cảnh nghiên cứu</h2>
+      <p>
+        Trong nhiều lĩnh vực đời sống, con người vẫn cần trực tiếp thao tác các công việc nguy hiểm 
+        như pha chế hóa chất độc hại, chăm sóc bệnh nhân mắc bệnh truyền nhiễm (ví dụ Covid-19). 
+        Các tình huống này tiềm ẩn nguy cơ cao về tai nạn lao động và lây nhiễm. Do đó, việc phát triển 
+        hệ thống robot có khả năng điều khiển từ xa, an toàn là một nhu cầu cấp thiết.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-bold text-blue-600 mb-2">Mục tiêu nghiên cứu</h2>
+      <p>
+        Đề tài hướng tới xây dựng một cánh tay robot có khả năng điều khiển từ xa bằng tín hiệu 
+        <a href="https://vi.wikipedia.org/wiki/%C4%90i%E1%BB%87n_c%C6%A1_ho%C3%A1" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">EMG (Electromyography)</a>. 
+        Tín hiệu EMG thu được từ cơ bắp sẽ được xử lý, học máy và truyền đến robot để điều khiển chuyển động chính xác.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-bold text-blue-600 mb-2">Phương pháp nghiên cứu</h2>
+      <ul class="list-disc ml-6 space-y-2">
+        <li>Thu thập và xử lý tín hiệu EMG từ người điều khiển qua các cảm biến gắn trên cơ bắp.</li>
+        <li>Ứng dụng thuật toán K-Means là một thuật toán học máy không giám sát dùng để chia dữ liệu thành k cụm bằng cách giảm thiểu phương sai trong mỗi cụm để phân loại cử chỉ tay.</li>
+        <li>Truyền dữ liệu qua giao thức không dây (WiFi/MQTT) đến bộ điều khiển cánh tay robot.</li>
+        <li>Tích hợp mô hình servo/động cơ để mô phỏng chuyển động tương tự bàn tay con người.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-bold text-blue-600 mb-2">Ứng dụng trong hỗ trợ người khuyết tật</h2>
+      <p>
+        Đề tài mang lại giá trị nhân văn sâu sắc: hỗ trợ người mất chi, suy giảm khả năng vận động 
+        có thể sử dụng cánh tay robot như một bộ phận thay thế. Bằng cách gắn cảm biến EMG, 
+        họ có thể điều khiển robot dễ dàng, giúp cải thiện khả năng sinh hoạt và hòa nhập xã hội.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-bold text-blue-600 mb-2">Kết quả mong đợi</h2>
+      <ul class="list-disc ml-6 space-y-2">
+        <li>Một hệ thống cánh tay robot hoàn chỉnh, có thể điều khiển bằng tín hiệu EMG theo thời gian thực.</li>
+        <li>Ứng dụng thực tiễn trong phòng thí nghiệm, bệnh viện và đời sống hàng ngày.</li>
+        <li>Mở rộng nghiên cứu sang lĩnh vực phục hồi chức năng và bionic prosthetics.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer class="mt-10 mb-4 text-center text-gray-500 text-sm">
+    © 2025 Nhóm Sinh viên Nguyễn Ngọc Tú & Vũ Bạch Long – Trường Đại học Công nghiệp thành phố Hồ Chí Minh
+  </footer>
+</body>
+</html>

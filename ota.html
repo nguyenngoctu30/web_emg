@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ỨNG DỤNG CẢM BIẾN EMG VÀO ĐIỀU KHIỂN CÁNH TAY MÁY TỪ XA</title>
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="ota.css">
+    <div class="flex items-center gap-3">
+        <img src="logo.png" 
+             alt="logo" class="w-10 h-10 rounded-full border" />
+        <div class="text-lg font-semibold text-gray-700">ỨNG DỤNG CẢM BIẾN EMG VÀO ĐIỀU KHIỂN CÁNH TAY MÁY TỪ XA</div>
+      </div>
+</head>
+<body class="min-h-screen bg-white font-inter flex items-center justify-center p-4">
+    <div id="ota-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center transition-opacity duration-300">
+        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-lg w-full text-gray-900">
+            <h2 class="text-xl font-bold mb-4">EMG OTA Server</h2>
+            <p class="text-sm text-gray-500 mb-4">
+                Dán liên kết 
+                <a href="https://www.dropbox.com/" target="_blank" class="text-blue-500 underline">
+                  Dropbox
+                </a> 
+                và chuyển đổi để nhận link tải trực tiếp. Nhập topic và gửi OTA.
+              </p>              
+            <label class="block text-sm text-gray-600 mb-2">Liên kết chia sẻ Dropbox</label>
+            <input id="dropboxLink" type="text" class="w-full p-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="https://www.dropbox.com/scl/fi/....?dl=0" />
+            <div class="flex gap-2 mt-3">
+                <button id="convertBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Chuyển đổi</button>
+                <button id="copyBtn" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">Sao chép</button>
+            </div>
+            <label class="block text-sm text-gray-600 mt-4 mb-2">Liên kết tải xuống trực tiếp</label>
+            <input id="directLink" type="text" class="w-full p-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900" readonly />
+            <label class="block text-sm text-gray-600 mt-4 mb-2">Máy chủ MQTT (WebSocket)</label>
+            <input id="broker" type="text" class="w-full p-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900" value="ws://broker.hivemq.com:8000/mqtt" />
+            <div class="flex gap-4 mt-4">
+                <div class="flex-1">
+                    <label class="block text-sm text-gray-600 mb-2">Chủ đề (Topic)</label>
+                    <input id="topic" type="text" class="w-full p-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900" value="devices/device01/ota" />
+                </div>
+                <div class="w-24">
+                    <label class="block text-sm text-gray-600 mb-2">QoS</label>
+                    <input id="qos" type="text" class="w-full p-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900" value="0" />
+                </div>
+            </div>
+            <label class="block text-sm text-gray-600 mt-4 mb-2">Nội dung (JSON)</label>
+            <textarea id="payload" rows="3" class="w-full p-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900">{ "url": "" }</textarea>
+            <div class="flex gap-2 mt-3">
+                <button id="connectBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Kết nối MQTT</button>
+                <button id="publishBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Gửi OTA</button>
+                <button id="close-ota" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">Đóng</button>
+            </div>
+            <div id="ota-status" class="mt-3 p-2 bg-gray-100 rounded-lg text-sm text-gray-600">Trạng thái: ngắt kết nối</div>
+            <h3 class="text-sm font-semibold mt-4">Nhật ký</h3>
+            <pre id="ota-log" class="p-2 bg-gray-100 rounded-lg text-sm text-gray-600 overflow-auto max-h-40">Sẵn sàng.</pre>
+        </div>
+    </div>
+    <script src="ota.js"></script>
+    <footer class="mt-10 mb-4 text-center text-gray-500 text-sm">
+        © 2025 Nhóm Sinh viên Nguyễn Ngọc Tú & Vũ Bạch Long – Trường Đại học Công nghiệp thành phố Hồ Chí Minh
+      </footer>
+</body>
+</html>

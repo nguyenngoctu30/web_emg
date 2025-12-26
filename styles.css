@@ -1,0 +1,138 @@
+/* Cài đặt chung cho body */
+body {
+    font-family: 'Inter', sans-serif;
+    background: #ffffff;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+}
+
+/* Hiệu ứng cho hình hand */
+#hand-image {
+    transition: transform 0.5s ease-in-out, opacity 0.3s ease;
+}
+
+#hand-image:active {
+    opacity: 0.9;
+    transform: scale(1.05);
+}
+
+/* Màu nền và chuyển đổi trạng thái của kết nối */
+#connection-status {
+    transition: background-color 0.5s ease;
+}
+
+/* Thanh canvas và biểu đồ */
+canvas {
+    max-height: 350px;
+    width: 100%;
+    transition: transform 0.3s ease;
+    touch-action: manipulation;
+}
+
+#emg-chart {
+    max-height: 650px;
+    width: 100%;
+}
+
+/* Hiệu ứng focus cho các phần tử */
+:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #3b82f6;
+}
+
+/* Styles cho hình ảnh trong header */
+header img {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
+/* Hiệu ứng xoay spinning animation */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Hiệu ứng fade-in cho các section */
+header, section, .fade-section {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+header.visible, section.visible, .fade-section.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Preloader styles */
+#preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #f4f8ff, #c4c5c6);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+#preloader.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#preloader-logo {
+    width: 220px;
+    height: auto;
+    margin-bottom: 1rem;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+#preloader-text {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* Responsive cho header và canvas */
+@media (max-width: 768px) {
+    header img {
+        width: 70px;
+        height: auto;
+    }
+    #main-title {
+        font-size: 1.5rem;
+    }
+    #main-description {
+        font-size: 0.9rem;
+    }
+    canvas {
+        max-height: 200px;
+    }
+    #emg-chart {
+        max-height: 280px;
+    }
+    #preloader-logo {
+        width: 90px;
+    }
+    #preloader-text {
+        font-size: 1rem;
+    }
+}
