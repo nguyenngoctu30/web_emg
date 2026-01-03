@@ -35,10 +35,17 @@
             <input id="directLink" type="text" class="w-full p-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900" readonly />
             <label class="block text-sm text-gray-600 mt-4 mb-2">Máy chủ MQTT (WebSocket)</label>
             <input id="broker" type="text" class="w-full p-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900" value="ws://broker.hivemq.com:8000/mqtt" />
+            <label class="block text-sm text-gray-600 mt-4 mb-2">Tên thiết bị (Device ID)</label>
+            <input id="deviceId" type="text" class="w-full p-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="device01" value="device01" />
+            <p class="text-xs text-gray-500 mt-1">
+                Topic sẽ tự động: <code class="bg-gray-200 px-1 rounded">devices/<span id="deviceId-preview">device01</span>/ota</code>
+                <br>
+                <span class="text-gray-400">Ví dụ: device01, device02, esp32-001, ...</span>
+            </p>
             <div class="flex gap-4 mt-4">
                 <div class="flex-1">
-                    <label class="block text-sm text-gray-600 mb-2">Chủ đề (Topic)</label>
-                    <input id="topic" type="text" class="w-full p-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900" value="devices/device01/ota" />
+                    <label class="block text-sm text-gray-600 mb-2">Chủ đề (Topic) - Tự động</label>
+                    <input id="topic" type="text" class="w-full p-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900" value="devices/device01/ota" readonly />
                 </div>
                 <div class="w-24">
                     <label class="block text-sm text-gray-600 mb-2">QoS</label>

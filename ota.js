@@ -15,11 +15,88 @@ const dropboxInput = document.getElementById('dropboxLink');
 const directInput = document.getElementById('directLink');
 const payloadEl = document.getElementById('payload');
 const brokerEl = document.getElementById('broker');
+const deviceIdEl = document.getElementById('deviceId');
 const topicEl = document.getElementById('topic');
 const qosEl = document.getElementById('qos');
 const otaStatusEl = document.getElementById('ota-status');
 const otaLogEl = document.getElementById('ota-log');
+const deviceIdPreviewEl = document.getElementById('deviceId-preview');
 let otaClient = null;
+
+// Load device ID from localStorage
+const savedDeviceId = localStorage.getItem('ota_deviceId');
+if (savedDeviceId) {
+    deviceIdEl.value = savedDeviceId;
+}
+
+// Store previous topic for unsubscribe
+let previousTopic = '';
+
+// Function to sanitize device ID (remove invalid MQTT topic characters)
+function sanitizeDeviceId(deviceId) {
+    // Remove or replace invalid characters: #, +, /, space
+    return deviceId
+        .replace(/[#+\/\s]/g, '_')  // Replace invalid chars with underscore
+        .replace(/^_+|_+$/g, '')    // Remove leading/trailing underscores
+        .replace(/_+/g, '_');        // Replace multiple underscores with single
+}
+
+// Function to update topic based on device ID
+function updateTopic() {
+    let deviceId = deviceIdEl.value.trim() || 'device01';
+    
+    // Sanitize device ID
+    const sanitized = sanitizeDeviceId(deviceId);
+    if (sanitized !== deviceId) {
+        deviceId = sanitized;
+        deviceIdEl.value = deviceId;
+        otaLog('Device ID đã được làm sạch:', deviceId);
+    }
+    
+    if (!deviceId) {
+        deviceId = 'device01';
+        deviceIdEl.value = deviceId;
+    }
+    
+    const topic = `devices/${deviceId}/ota`;
+    
+    // If topic changed and we're connected, unsubscribe old topic and subscribe new one
+    if (otaClient && otaClient.connected && previousTopic && previousTopic !== topic) {
+        otaClient.unsubscribe(previousTopic, (err) => {
+            if (err) {
+                otaLog('Lỗi unsubscribe', previousTopic, err.message);
+            } else {
+                otaLog('Đã unsubscribe:', previousTopic);
+            }
+        });
+    }
+    
+    topicEl.value = topic;
+    deviceIdPreviewEl.textContent = deviceId;
+    
+    // Save to localStorage
+    localStorage.setItem('ota_deviceId', deviceId);
+    
+    // If connected, subscribe to new topic
+    if (otaClient && otaClient.connected) {
+        otaClient.subscribe(topic, { qos: 0 }, (err) => {
+            if (err) {
+                otaLog('Lỗi subscribe', topic, err.message);
+            } else {
+                otaLog('Đã subscribe topic mới:', topic);
+            }
+        });
+    }
+    
+    previousTopic = topic;
+}
+
+// Update topic when device ID changes
+deviceIdEl.addEventListener('input', updateTopic);
+deviceIdEl.addEventListener('change', updateTopic);
+
+// Initialize topic on page load
+updateTopic();
 
 function otaLog(...args) {
     const txt = args.join(' ');
@@ -36,20 +113,67 @@ function setOtaStatus(s) {
 
 function convertDropboxLink(input) {
     try {
-        const u = new URL(input.trim());
+        const trimmed = input.trim();
+        if (!trimmed) return input;
+        
+        const u = new URL(trimmed);
+        
+        // Already a direct download link
         if (u.hostname.includes('dl.dropboxusercontent.com')) {
-            if (!u.protocol) u.protocol = 'https:';
-            return u.toString();
+            // Ensure https protocol
+            if (u.protocol !== 'https:') {
+                u.protocol = 'https:';
+            }
+            // Ensure dl=1 for direct download (remove other dl params first)
+            u.searchParams.delete('dl');
+            u.searchParams.set('dl', '1');
+            
+            const result = u.toString();
+            otaLog('URL đã là direct link:', result.substring(0, 80) + '...');
+            return result;
         }
-        if (u.hostname.includes('dropbox.com')) {
-            const newUrl = new URL(u.toString());
-            newUrl.hostname = 'dl.dropboxusercontent.com';
-            newUrl.searchParams.delete('dl');
-            newUrl.protocol = 'https:';
-            return newUrl.toString();
+        
+        // Dropbox share link - convert to direct download
+        if (u.hostname.includes('dropbox.com') || u.hostname.includes('www.dropbox.com')) {
+            // Extract path (e.g., /scl/fi/xxxxx/file.bin or /s/xxxxx/file.bin)
+            let path = u.pathname;
+            
+            // Handle /scl/fi/ format (new Dropbox format)
+            if (path.includes('/scl/fi/')) {
+                // Keep the path as is, just change hostname
+                u.hostname = 'dl.dropboxusercontent.com';
+            } 
+            // Handle /s/ format (old Dropbox format)
+            else if (path.startsWith('/s/')) {
+                u.hostname = 'dl.dropboxusercontent.com';
+            }
+            // Default: try to convert
+            else {
+                u.hostname = 'dl.dropboxusercontent.com';
+            }
+            
+            // Set protocol to https
+            u.protocol = 'https:';
+            
+            // Preserve important query parameters (rlkey, st, etc.) but ensure dl=1
+            // Remove old dl parameter if exists
+            u.searchParams.delete('dl');
+            u.searchParams.set('dl', '1');
+            
+            const result = u.toString();
+            otaLog('Đã chuyển đổi từ share link sang direct link');
+            return result;
         }
-        return input;
+        
+        // Not a Dropbox link, return as is (but validate it's HTTPS)
+        if (u.protocol === 'https:') {
+            return input;
+        } else {
+            otaLog('Cảnh báo: URL không phải HTTPS');
+            return input;
+        }
     } catch (e) {
+        otaLog('Lỗi chuyển đổi link:', e.message);
         return input;
     }
 }
@@ -62,15 +186,54 @@ document.getElementById('convertBtn').addEventListener('click', () => {
             : 'Vui lòng dán liên kết chia sẻ Dropbox trước');
         return;
     }
+    
     const direct = convertDropboxLink(inLink);
+    
+    // Validate converted URL
+    if (!direct || direct === inLink) {
+        // Check if it's already a valid HTTPS URL
+        try {
+            const urlObj = new URL(inLink);
+            if (urlObj.protocol === 'https:') {
+                directInput.value = inLink;
+                const obj = { url: inLink };
+                payloadEl.value = JSON.stringify(obj, null, 2);
+                otaLog('URL đã hợp lệ (HTTPS):', inLink);
+                return;
+            }
+        } catch (e) {
+            // Not a valid URL
+        }
+        
+        alert('Không thể chuyển đổi link. Vui lòng kiểm tra lại link Dropbox.\n\nLink phải là:\n- Dropbox share link (dropbox.com/scl/fi/...)\n- Hoặc direct download link (dl.dropboxusercontent.com/...)');
+        otaLog('Lỗi: Không thể chuyển đổi link');
+        return;
+    }
+    
+    // Validate the converted URL is HTTPS
+    try {
+        const urlObj = new URL(direct);
+        if (urlObj.protocol !== 'https:') {
+            alert('Cảnh báo: URL sau khi chuyển đổi không phải HTTPS.\nURL: ' + direct);
+            otaLog('Cảnh báo: URL không phải HTTPS:', direct);
+        }
+    } catch (e) {
+        alert('Lỗi: URL sau khi chuyển đổi không hợp lệ.\n' + e.message);
+        otaLog('Lỗi: URL không hợp lệ sau khi chuyển đổi:', e.message);
+        return;
+    }
+    
     directInput.value = direct;
     try {
         const obj = { url: direct };
         payloadEl.value = JSON.stringify(obj, null, 2);
-    } catch (e) {}
-    otaLog(translations[currentLang].emgDescription.includes('Converted')
-        ? 'Converted ->'
-        : 'Đã chuyển đổi ->', direct);
+        otaLog(translations[currentLang].emgDescription.includes('Converted')
+            ? 'Converted ->'
+            : 'Đã chuyển đổi ->', direct);
+        otaLog('Payload đã được cập nhật với URL mới');
+    } catch (e) {
+        otaLog('Lỗi tạo payload:', e.message);
+    }
 });
 
 document.getElementById('copyBtn').addEventListener('click', () => {
@@ -121,6 +284,64 @@ document.getElementById('connectBtn').addEventListener('click', () => {
             otaLog(translations[currentLang].emgDescription.includes('Connected')
                 ? 'MQTT connected'
                 : 'MQTT đã kết nối');
+            
+            // Subscribe to OTA feedback topics
+            const feedbackTopic = topicEl.value.trim() || 'devices/device01/ota';
+            const generalOtaTopic = 'ota';
+            
+            previousTopic = feedbackTopic; // Store for future unsubscribe
+            
+            otaClient.subscribe(feedbackTopic, { qos: 0 }, (err) => {
+                if (err) {
+                    otaLog('Lỗi subscribe', feedbackTopic, err.message);
+                } else {
+                    otaLog('Đã subscribe:', feedbackTopic);
+                }
+            });
+            
+            otaClient.subscribe(generalOtaTopic, { qos: 0 }, (err) => {
+                if (err) {
+                    otaLog('Lỗi subscribe', generalOtaTopic, err.message);
+                } else {
+                    otaLog('Đã subscribe:', generalOtaTopic);
+                }
+            });
+        });
+        
+        // Listen for OTA status messages
+        otaClient.on('message', (topic, message) => {
+            try {
+                const payload = message.toString();
+                otaLog('Nhận từ', topic + ':', payload);
+                
+                // Try to parse as JSON
+                try {
+                    const obj = JSON.parse(payload);
+                    if (obj.status) {
+                        if (obj.status === 'downloading') {
+                            setOtaStatus('Đang tải xuống...');
+                            otaLog('OTA: Đang tải xuống firmware...');
+                        } else if (obj.status === 'success') {
+                            setOtaStatus('OTA thành công!');
+                            otaLog('OTA: Cập nhật thành công! ESP32 sẽ khởi động lại.');
+                        } else if (obj.status === 'failed') {
+                            setOtaStatus('OTA thất bại');
+                            otaLog('OTA: Thất bại -', obj.error || 'Unknown error');
+                            if (obj.code) {
+                                otaLog('Mã lỗi:', obj.code);
+                            }
+                        } else if (obj.status === 'no_updates') {
+                            setOtaStatus('Không có bản cập nhật');
+                            otaLog('OTA: Không có bản cập nhật');
+                        }
+                    }
+                } catch (e) {
+                    // Not JSON, just log as text
+                    otaLog('Message:', payload);
+                }
+            } catch (e) {
+                otaLog('Lỗi xử lý message:', e.message);
+            }
         });
         otaClient.on('reconnect', () => {
             setOtaStatus(translations[currentLang].emgDescription.includes('reconnecting')
@@ -172,23 +393,83 @@ document.getElementById('publishBtn').addEventListener('click', () => {
     }
     let qos = parseInt(qosEl.value) || 0;
     let payload = payloadEl.value.trim();
+    
+    // Validate JSON format
+    let payloadObj;
     try {
-        JSON.parse(payload);
+        payloadObj = JSON.parse(payload);
     } catch (e) {
         alert(translations[currentLang].errorContent.includes('not valid JSON')
-            ? 'Payload is not valid JSON'
-            : 'Nội dung không phải JSON hợp lệ');
+            ? 'Payload is not valid JSON: ' + e.message
+            : 'Nội dung không phải JSON hợp lệ: ' + e.message);
+        otaLog('Lỗi parse JSON:', e.message);
         return;
     }
-    otaClient.publish(topic, payload, { qos: qos }, (err) => {
+    
+    // Validate URL in payload
+    if (!payloadObj.url || typeof payloadObj.url !== 'string') {
+        alert('Payload phải chứa trường "url" là chuỗi hợp lệ.\nVui lòng chuyển đổi Dropbox link trước.');
+        otaLog('Lỗi: Payload thiếu URL hoặc URL không hợp lệ');
+        return;
+    }
+    
+    const url = payloadObj.url.trim();
+    if (!url) {
+        alert('URL không được để trống.\nVui lòng chuyển đổi Dropbox link trước.');
+        otaLog('Lỗi: URL rỗng');
+        return;
+    }
+    
+    // Validate URL format
+    try {
+        const urlObj = new URL(url);
+        if (urlObj.protocol !== 'https:') {
+            alert('URL phải sử dụng HTTPS.\nURL hiện tại: ' + urlObj.protocol);
+            otaLog('Lỗi: URL không phải HTTPS:', url);
+            return;
+        }
+        
+        // Check if it's a Dropbox direct link
+        if (!urlObj.hostname.includes('dl.dropboxusercontent.com') && 
+            !urlObj.hostname.includes('dropbox.com')) {
+            otaLog('Cảnh báo: URL không phải Dropbox link');
+        }
+    } catch (e) {
+        alert('URL không hợp lệ: ' + e.message + '\nURL: ' + url);
+        otaLog('Lỗi: URL không hợp lệ:', e.message, url);
+        return;
+    }
+    
+    // Re-stringify to ensure clean JSON (compact format, no spaces)
+    const cleanPayload = JSON.stringify({ url: url });
+    
+    otaLog('═══════════════════════════════════');
+    otaLog('Đang gửi OTA command...');
+    otaLog('Topic:', topic);
+    otaLog('URL:', url);
+    otaLog('URL length:', url.length);
+    otaLog('Payload:', cleanPayload);
+    otaLog('Payload length:', cleanPayload.length);
+    otaLog('QoS:', qos);
+    
+    // Log payload preview for debugging
+    const payloadPreview = cleanPayload.length > 150 
+        ? cleanPayload.substring(0, 150) + '...' 
+        : cleanPayload;
+    otaLog('Payload preview:', payloadPreview);
+    
+    otaClient.publish(topic, cleanPayload, { qos: qos }, (err) => {
         if (err) {
             otaLog(translations[currentLang].errorContent.includes('Error')
                 ? 'Publish error'
                 : 'Lỗi gửi', err);
+            setOtaStatus('Lỗi gửi');
         } else {
             otaLog(translations[currentLang].emgDescription.includes('Published')
                 ? 'Published to'
-                : 'Đã gửi tới', topic, '\n', payload);
+                : '✅ Đã gửi tới', topic);
+            otaLog('Payload đã gửi:', cleanPayload);
+            setOtaStatus('Đã gửi OTA command, đang chờ phản hồi...');
         }
     });
 });

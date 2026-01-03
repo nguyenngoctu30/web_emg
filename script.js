@@ -34,7 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const thresholdLowElement = document.getElementById('threshold-low');
     const thresholdHighElement = document.getElementById('threshold-high');
     const firmwareVersionElement = document.getElementById('firmware-version');
-    const filteredLineElement = document.getElementById('filtered-line');
+    // Some HTML uses id="ema-line" for displaying S1/S2 EMA — fall back to legacy id 'filtered-line'
+    const filteredLineElement = document.getElementById('ema-line') || document.getElementById('filtered-line');
     
     // Safe setter to avoid errors if old elements are missing
     function safeSet(el, text) {
@@ -162,8 +163,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     let currentLang = 'vi';
+    // Default training duration in seconds (keeps web and device in sync)
+    const TRAINING_DURATION = 30;
     let trainingStatus = translations[currentLang].trainingNotStarted;
-    let trainingTimer = 60;
+    let trainingTimer = TRAINING_DURATION;
     let filteredData = [];
     let thresholdLowValue = null;
     let thresholdHighValue = null;
@@ -187,17 +190,17 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('transition-count').textContent = `${t.transitionCount}: ${transitionCount}`;
         document.getElementById('training-status').textContent = `${t.trainingStatus}: ${trainingStatus}`;
         document.getElementById('training-timer').textContent = trainingTimer > 0 ? `${t.trainingTimer}: ${trainingTimer}s` : '';
-        document.getElementById('threshold-low').textContent = `${t.thresholdLow}: ${thresholdLowValue || t.noData}`;
-        document.getElementById('threshold-high').textContent = `${t.thresholdHigh}: ${thresholdHighValue || t.noData}`;
-        document.getElementById('firmware-version').textContent = `${t.firmwareVersion}: ${firmwareVersion || t.noData}`;
+        document.getElementById('threshold-low').textContent = `${t.thresholdLow}: ${thresholdLowValue !== null ? thresholdLowValue : t.noData}`;
+        document.getElementById('threshold-high').textContent = `${t.thresholdHigh}: ${thresholdHighValue !== null ? thresholdHighValue : t.noData}`;
+        document.getElementById('firmware-version').textContent = `${t.firmwareVersion}: ${firmwareVersion !== null ? firmwareVersion : t.noData}`;
         
         // Display s1_filtered/s2_filtered live values
         if (currentFiltered1 !== null && currentFiltered2 !== null) {
-            safeSet(filteredLineElement, `s1_filtered: ${currentFiltered1.toFixed(2)} | s2_filtered: ${currentFiltered2.toFixed(2)}`);
+            safeSet(filteredLineElement, `S1_EMA: ${currentFiltered1.toFixed(2)} | S2_EMA: ${currentFiltered2.toFixed(2)}`);
         } else if (currentFiltered1 !== null) {
-            safeSet(filteredLineElement, `s1_filtered: ${currentFiltered1.toFixed(2)} | s2_filtered: ${t.noData}`);
+            safeSet(filteredLineElement, `S1_EMA: ${currentFiltered1.toFixed(2)} | S2_EMA: ${t.noData}`);
         } else {
-            safeSet(filteredLineElement, `s1_filtered: ${t.noData} | s2_filtered: ${t.noData}`);
+            safeSet(filteredLineElement, `S1_EMA: ${t.noData} | S2_EMA: ${t.noData}`);
         }
         
         document.getElementById('train-button').textContent = t.trainButton;
@@ -294,12 +297,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const t = translations[currentLang];
         trainingStatus = t.trainingInProgress;
         trainingStatusElement.textContent = `${t.trainingStatus}: ${trainingStatus}`;
-        trainingTimer = 60;
+        trainingTimer = TRAINING_DURATION;
         trainingTimerElement.textContent = `${t.trainingTimer}: ${trainingTimer}s`;
         trainingTimerElement.classList.remove('hidden');
 
         // Send start command to device
-        client.publish(mqttTrainTopic, 'start');
+        // publish JSON with duration so ESP can use the same training window
+        try {
+            client.publish(mqttTrainTopic, JSON.stringify({ cmd: 'start', duration: TRAINING_DURATION }));
+        } catch (e) {
+            client.publish(mqttTrainTopic, 'start');
+        }
         
         // countdown UI for visual feedback
         if (trainingInterval) clearInterval(trainingInterval);
@@ -769,22 +777,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     const obj = JSON.parse(payload);
                     
                     // ✅ CẬP NHẬT FIRMWARE VERSION TỪ MQTT
+                    // Accept multiple possible field names from firmware: s1_filtered / s1 / s1_ema
                     if (obj.firmware !== undefined && obj.firmware !== null) {
                         firmwareVersion = obj.firmware;
                         firmwareVersionElement.textContent = `${translations[currentLang].firmwareVersion}: ${firmwareVersion}`;
                         console.log(`✅ Firmware version updated from MQTT: ${firmwareVersion}`);
                     }
-                    
-                    if (obj && (obj.s1_filtered !== undefined || obj.s2_filtered !== undefined)) {
-                        currentFiltered1 = obj.s1_filtered !== undefined ? parseFloat(obj.s1_filtered) : null;
-                        currentFiltered2 = obj.s2_filtered !== undefined ? parseFloat(obj.s2_filtered) : null;
+
+                    // Normalize sensor keys: support `s1_filtered` or `s1` (device may publish either)
+                    const s1val = (obj.s1_filtered !== undefined) ? obj.s1_filtered : (obj.s1 !== undefined ? obj.s1 : (obj.s1_ema !== undefined ? obj.s1_ema : undefined));
+                    const s2val = (obj.s2_filtered !== undefined) ? obj.s2_filtered : (obj.s2 !== undefined ? obj.s2 : (obj.s2_ema !== undefined ? obj.s2_ema : undefined));
+
+                    if (s1val !== undefined || s2val !== undefined) {
+                        currentFiltered1 = s1val !== undefined && s1val !== null ? parseFloat(s1val) : null;
+                        currentFiltered2 = s2val !== undefined && s2val !== null ? parseFloat(s2val) : null;
                         
                         if (currentFiltered1 !== null && currentFiltered2 !== null) {
-                            safeSet(filteredLineElement, `s1_filtered: ${currentFiltered1.toFixed(2)} | s2_filtered: ${currentFiltered2.toFixed(2)}`);
+                            safeSet(filteredLineElement, `S1_EMA: ${currentFiltered1.toFixed(2)} | S2_EMA: ${currentFiltered2.toFixed(2)}`);
                         } else if (currentFiltered1 !== null) {
-                            safeSet(filteredLineElement, `s1_filtered: ${currentFiltered1.toFixed(2)} | s2_filtered: ${translations[currentLang].noData}`);
+                            safeSet(filteredLineElement, `S1_EMA: ${currentFiltered1.toFixed(2)} | S2_EMA: ${translations[currentLang].noData}`);
                         } else if (currentFiltered2 !== null) {
-                            safeSet(filteredLineElement, `s1_filtered: ${translations[currentLang].noData} | s2_filtered: ${currentFiltered2.toFixed(2)}`);
+                            safeSet(filteredLineElement, `S1_EMA: ${translations[currentLang].noData} | S2_EMA: ${currentFiltered2.toFixed(2)}`);
                         }
 
                         filteredData.push({ 
@@ -797,7 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         const timeLabel = timestamp;
                         emgChart.data.labels.push(timeLabel);
                         emgChart.data.datasets[0].data.push(currentFiltered1 !== null ? currentFiltered1 : NaN);
-                        emgChart.data.datasets[1].data.push(currentFiltered2 !== null ? currentFiltered2 : NaN);
+                        if (emgChart.data.datasets[1]) emgChart.data.datasets[1].data.push(currentFiltered2 !== null ? currentFiltered2 : NaN);
                         
                         const maxPoints = 200;
                         if (emgChart.data.labels.length > maxPoints) {
@@ -817,7 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const singleValue = parseFloat(payload);
                 if (!isNaN(singleValue)) {
                     currentFiltered1 = singleValue;
-                    safeSet(filteredLineElement, `s1_filtered: ${singleValue.toFixed(2)} | s2_filtered: ${translations[currentLang].noData}`);
+                    safeSet(filteredLineElement, `S1_EMA: ${singleValue.toFixed(2)} | S2_EMA: ${translations[currentLang].noData}`);
                     
                     filteredData.push({ 
                         timestamp: now, 
@@ -832,7 +845,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (emgChart.data.labels.length > 200) {
                         emgChart.data.labels.shift();
                         emgChart.data.datasets[0].data.shift();
-                        emgChart.data.datasets[1].data.shift();
+                        if (emgChart.data.datasets[1]) emgChart.data.datasets[1].data.shift();
                     }
                     emgChart.update();
                     console.log(`Single value updated: ${singleValue.toFixed(2)}`);
@@ -852,22 +865,46 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // Xử lý training messages
                     if (topic === mqttTrainTopic) {
-                        if (obj.status === 'training_started') {
+                        // training started
+                        if (obj.status === 'training_started' || obj.status === 'started') {
                             trainingStatus = translations[currentLang].trainingInProgress;
                             trainingStatusElement.textContent = `${translations[currentLang].trainingStatus}: ${trainingStatus}`;
-                        } else if (obj.status === 'training_done') {
+                            // show timer if duration included
+                            const dur = obj.duration !== undefined ? parseInt(obj.duration) : TRAINING_DURATION;
+                            trainingTimer = dur;
+                            trainingTimerElement.textContent = `${translations[currentLang].trainingTimer}: ${trainingTimer}s`;
+                            trainingTimerElement.classList.remove('hidden');
+
+                        // progress update
+                        } else if (obj.status === 'training_progress' || obj.status === 'progress') {
+                            const progress = obj.progress !== undefined ? parseInt(obj.progress) : null;
+                            const dur = obj.duration !== undefined ? parseInt(obj.duration) : TRAINING_DURATION;
+                            if (progress !== null && !isNaN(progress)) {
+                                trainingStatus = translations[currentLang].trainingInProgress;
+                                trainingStatusElement.textContent = `${translations[currentLang].trainingStatus}: ${trainingStatus} (${progress}%)`;
+                                // estimate remaining seconds
+                                const remaining = Math.max(0, Math.ceil((1 - (progress / 100)) * dur));
+                                trainingTimer = remaining;
+                                trainingTimerElement.textContent = `${translations[currentLang].trainingTimer}: ${trainingTimer}s`;
+                                trainingTimerElement.classList.remove('hidden');
+                            }
+
+                        // collection finished (device finished collecting samples)
+                        } else if (obj.status === 'collection_done' || obj.status === 'training_done') {
                             if (obj.threshold_low !== undefined) {
-                                thresholdLowValue = obj.threshold_low;
+                                thresholdLowValue = parseInt(obj.threshold_low);
                                 thresholdLowElement.textContent = `${translations[currentLang].thresholdLow}: ${thresholdLowValue}`;
                             }
                             if (obj.threshold_high !== undefined) {
-                                thresholdHighValue = obj.threshold_high;
+                                thresholdHighValue = parseInt(obj.threshold_high);
                                 thresholdHighElement.textContent = `${translations[currentLang].thresholdHigh}: ${thresholdHighValue}`;
                             }
                             trainingStatus = translations[currentLang].trainingCompleted;
                             trainingStatusElement.textContent = `${translations[currentLang].trainingStatus}: ${trainingStatus}`;
-                            console.log('Training completed:', obj);
-                        } else if (obj.status === 'not_enough_samples') {
+                            trainingTimerElement.classList.add('hidden');
+                            console.log('Training/collection completed:', obj);
+
+                        } else if (obj.status === 'not_enough_samples' || obj.status === 'insufficient_data') {
                             document.getElementById('error-content').textContent = translations[currentLang].noData + ' (training)';
                             openErrorModal();
                         }
@@ -877,11 +914,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 return;
             } else if (topic === mqttThresholdLowTopic) {
-                thresholdLowValue = payload;
+                // payload may be a string number
+                const vLow = parseInt(payload);
+                thresholdLowValue = isNaN(vLow) ? payload : vLow;
                 thresholdLowElement.textContent = `${translations[currentLang].thresholdLow}: ${thresholdLowValue}`;
 
             } else if (topic === mqttThresholdHighTopic) {
-                thresholdHighValue = payload;
+                const vHigh = parseInt(payload);
+                thresholdHighValue = isNaN(vHigh) ? payload : vHigh;
                 thresholdHighElement.textContent = `${translations[currentLang].thresholdHigh}: ${thresholdHighValue}`;
             }
         } catch (error) {
